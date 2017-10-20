@@ -38,18 +38,16 @@
         public function handlePost()
         {
 
-            if( isset($_POST['replacebutton'] ) && !empty($_POST['cate_name']))
+            if( isset($_POST['replacebutton'] ) && !empty($_POST['cate_name']) && !empty( $_POST['blog_id'] ))
             {
                 check_admin_referer('wp_sku',$this->pageSlug);
 
-                $this->dealData($_POST['cate_name']);
+                $this->dealData($_POST['blog_id'],$_POST['cate_name']);
                 $this->messages[] = ['status' => 'success', 'message' => 'successfully deal'];
             }
 
-
             if ( isset($_POST['clearbutton'] ))
             {
-
                 check_admin_referer('wp_sku',$this->pageSlug);
 
                 $this->clearData();
@@ -71,7 +69,7 @@
             return [
                     'size' =>
                        ['name' => $data[0]['size']['name'],
-                         'value' => 'ADULT SIZE AGE 13+|YOUTH SIZE AGE 8 TO 12|CHILD SIZE AGE 4 TO 7',
+                         'value' => 'L(ADULT SIZE AGE 13+)|M(YOUTH SIZE AGE 8 TO 12)|S(CHILD SIZE AGE 4 TO 7)',
                          'position' => $data[0]['size']['position'],
                          'is_visible' => $data[0]['size']['is_visible'],
                          'is_variation' => $data[0]['size']['is_variation'],
@@ -83,7 +81,7 @@
         public function modifyAttributeSize()
         {
             return [
-                     'ADULT SIZE AGE 13+','YOUTH SIZE AGE 8 TO 12','CHILD SIZE AGE 4 TO 7'
+                     'L(ADULT SIZE AGE 13+)','M(YOUTH SIZE AGE 8 TO 12)','S(CHILD SIZE AGE 4 TO 7)'
             ];
         }
 
@@ -99,13 +97,20 @@
             return $products;
         }
 
-        public function dealData($cate_name)
+        public function dealData($blog_id,$cate_name)
         {
             //$productIds = $this->getData();//get product ids
             //get productIds
+
             global $wpdb;
+            if ( $blog_id == 1 ) {
+                $current_relationshios_table = 'wp_term_relationships';
+            } else {
+                $current_relationshios_table = 'wp_'.$blog_id.'_term_relationships';
+            }
+
             $termIds = get_terms(array('name' => $cate_name,'fields' => 'ids'));
-            $sql = "select object_id from `wp_3_term_relationships` where term_taxonomy_id = ".$termIds[0]; //need 优化
+            $sql = "select object_id from `$current_relationshios_table` where term_taxonomy_id = ".$termIds[0]; //need 优化
             $productIds = $wpdb->get_results($sql,ARRAY_A);
 
             foreach($productIds as $postId)
